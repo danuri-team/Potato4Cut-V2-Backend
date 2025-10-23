@@ -14,6 +14,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import java.time.LocalDateTime;
+import java.util.UUID;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
@@ -28,8 +29,8 @@ import org.hibernate.annotations.UpdateTimestamp;
 public class Report {
 
   @Id
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
-  private Long id;
+  @GeneratedValue(strategy = GenerationType.UUID)
+  private UUID id;
 
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "reporter_id", nullable = false)
@@ -40,7 +41,7 @@ public class Report {
   private ReportType type;
 
   @Column
-  private Long targetId;
+  private UUID targetId;
 
   @Column(nullable = false, length = 1000)
   private String reason;
@@ -68,7 +69,7 @@ public class Report {
   private LocalDateTime processedAt;
 
   @Builder
-  public Report(User reporter, ReportType type, Long targetId, String reason,
+  public Report(User reporter, ReportType type, UUID targetId, String reason,
       ReportStatus status) {
     this.reporter = reporter;
     this.type = type;
