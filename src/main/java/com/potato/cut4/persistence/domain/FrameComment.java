@@ -39,6 +39,8 @@ public class FrameComment {
   @Column(nullable = false, length = 1000)
   private String content;
 
+  private UUID parentComment;
+
   @Column(nullable = false)
   private boolean deleted = false;
 

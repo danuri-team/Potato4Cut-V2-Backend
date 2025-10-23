@@ -40,7 +40,7 @@ public class User {
   private String profileImageUrl;
 
   @Column(length = 500)
-  private String bio;
+  private String bio = "";
 
   @Enumerated(EnumType.STRING)
   @Column(nullable = false)
