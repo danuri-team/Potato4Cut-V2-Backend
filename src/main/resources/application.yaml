@@ -12,9 +12,10 @@ spring:
 
   jpa:
     open-in-view: false
+    hibernate:
+      ddl-auto: create
     properties:
       hibernate:
-        ddl-auto: update
         format_sql: true
         dialect: org.hibernate.dialect.MySQLDialect
         show_sql: true
@@ -31,5 +32,11 @@ spring:
       idle-timeout: 600000
       max-lifetime: 1800000
 
+jwt:
+  secret: ${JWT_SECRET}
+  access-token-validity: 3600000
+  refresh-token-validity: 604800000
 
-
+oauth:
+  google:
+    info-url: https://www.googleapis.com
