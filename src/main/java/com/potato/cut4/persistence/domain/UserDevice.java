@@ -19,10 +19,10 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 @Entity
-@Table(name = "frame_comments")
+@Table(name = "user_devices")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class FrameComment {
+public class UserDevice {
 
   @Id
   @GeneratedValue(strategy = GenerationType.UUID)
@@ -32,17 +32,17 @@ public class FrameComment {
   @JoinColumn(name = "user_id", nullable = false)
   private User user;
 
-  @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "frame_id", nullable = false)
-  private Frame frame;
+  @Column(nullable = false, unique = true, length = 500)
+  private String fcmToken;
 
-  @Column(nullable = false, length = 1000)
-  private String content;
+  @Column(length = 100)
+  private String deviceType; // iOS, Android
 
-  private UUID parentComment;
+  @Column(length = 100)
+  private String deviceModel;
 
   @Column(nullable = false)
-  private boolean deleted = false;
+  private boolean active = true;
 
   @CreationTimestamp
   @Column(nullable = false, updatable = false)
@@ -53,18 +53,18 @@ public class FrameComment {
   private LocalDateTime updatedAt;
 
   @Builder
-  public FrameComment(User user, Frame frame, String content, UUID parentComment) {
+  public UserDevice(User user, String fcmToken, String deviceType, String deviceModel) {
     this.user = user;
-    this.frame = frame;
-    this.parentComment = parentComment;
-    this.content = content;
+    this.fcmToken = fcmToken;
+    this.deviceType = deviceType;
+    this.deviceModel = deviceModel;
   }
 
-  public void updateContent(String content) {
-    this.content = content;
+  public void updateToken(String fcmToken) {
+    this.fcmToken = fcmToken;
   }
 
-  public void delete() {
-    this.deleted = true;
+  public void deactivate() {
+    this.active = false;
   }
 }

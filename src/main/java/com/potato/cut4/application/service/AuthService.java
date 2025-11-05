@@ -9,6 +9,7 @@ import com.potato.cut4.persistence.repository.UserRepository;
 import com.potato.cut4.presentation.dto.request.SocialLoginRequest;
 import com.potato.cut4.presentation.dto.response.AuthResponse;
 import com.potato.cut4.presentation.dto.response.TokenResponse;
+import java.util.Random;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,6 +26,8 @@ public class AuthService {
   private final JwtTokenProvider jwtTokenProvider;
   private final GoogleOauthInfoService googleOauthInfoService;
 
+  private static final Random RANDOM = new Random();
+
   @Transactional
   public AuthResponse socialLogin(SocialLoginRequest request) {
     GoogleInfoResDto oauthDto = googleOauthInfoService.login(request.getOauthToken());
@@ -40,6 +43,10 @@ public class AuthService {
     if (user == null) {
       isNewUser = true;
       user = createUser(request, oauthDto);
+    } else if (user.isDeleted()) {
+      isNewUser = true;
+      user.restore();
+      log.info("User restored: userId={}, email={}", user.getId(), user.getEmail());
     }
 
     String accessToken = jwtTokenProvider.createAccessToken(user.getId(), user.getRole());
@@ -80,7 +87,7 @@ public class AuthService {
 
   private User createUser(SocialLoginRequest request, GoogleInfoResDto oauthDto) {
     User user = User.builder()
-        .nickname("열정적인 감자")
+        .nickname("옹심이 " + RANDOM.nextInt(100000))
         .email(oauthDto.email())
         .socialProvider(request.getProvider())
         .socialId(oauthDto.sub())
@@ -88,10 +95,5 @@ public class AuthService {
         .build();
 
     return userRepository.save(user);
-  }
-
-  public User getUserById(UUID userId) {
-    return userRepository.findByIdAndDeletedFalse(userId)
-        .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
   }
 }
