@@ -5,6 +5,7 @@ import com.potato.cut4.common.integration.service.GoogleOauthInfoService;
 import com.potato.cut4.common.security.JwtTokenProvider;
 import com.potato.cut4.persistence.domain.User;
 import com.potato.cut4.persistence.domain.type.UserRole;
+import com.potato.cut4.persistence.repository.UserDeviceRepository;
 import com.potato.cut4.persistence.repository.UserRepository;
 import com.potato.cut4.presentation.dto.request.SocialLoginRequest;
 import com.potato.cut4.presentation.dto.response.AuthResponse;
@@ -25,6 +26,7 @@ public class AuthService {
   private final UserRepository userRepository;
   private final JwtTokenProvider jwtTokenProvider;
   private final GoogleOauthInfoService googleOauthInfoService;
+  private final UserDeviceRepository userDeviceRepository;
 
   private static final Random RANDOM = new Random();
 
@@ -34,7 +36,7 @@ public class AuthService {
 
     User user = userRepository.findBySocialProviderAndSocialId(
             request.getProvider(),
-            oauthDto.sub()
+            oauthDto.id()
         )
         .orElse(null);
 
@@ -90,7 +92,7 @@ public class AuthService {
         .nickname("옹심이 " + RANDOM.nextInt(100000))
         .email(oauthDto.email())
         .socialProvider(request.getProvider())
-        .socialId(oauthDto.sub())
+        .socialId(oauthDto.id())
         .role(UserRole.USER)
         .build();
 
