@@ -55,4 +55,12 @@ public class NotificationController {
 
     return ResponseEntity.ok(ApiResponse.success(count));
   }
+
+  @PutMapping
+  public ResponseEntity<ApiResponse<Void>> updateNotificationEnabled() {
+    UUID userId = AuthenticationUtil.getCurrentUserId();
+    notificationService.updateNotificationEnabled(userId);
+
+    return ResponseEntity.ok(ApiResponse.success());
+  }
 }

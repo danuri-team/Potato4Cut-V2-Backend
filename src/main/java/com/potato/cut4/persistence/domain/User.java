@@ -58,6 +58,9 @@ public class User {
   @Column(nullable = false)
   private boolean deleted = false;
 
+  @Column(nullable = false)
+  private boolean notificationEnabled = false;
+
   @CreationTimestamp
   @Column(nullable = false, updatable = false)
   private LocalDateTime createdAt;
@@ -104,6 +107,10 @@ public class User {
 
   public void updateRole(UserRole role) {
     this.role = role;
+  }
+
+  public void updateNotifiactionEnabled() {
+    this.notificationEnabled = !notificationEnabled;
   }
 
   public void delete() {

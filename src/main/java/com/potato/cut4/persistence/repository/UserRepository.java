@@ -14,12 +14,13 @@ public interface UserRepository extends JpaRepository<User, UUID> {
 
   Optional<User> findBySocialProviderAndSocialId(SocialProvider provider, String socialId);
 
-  Optional<User> findByEmail(String email);
-
   boolean existsByNickname(String nickname);
 
   Optional<User> findByIdAndDeletedFalse(UUID id);
 
   @Query("SELECT u.id FROM User u WHERE u.deleted = false")
   List<UUID> findAllActiveUserIds();
+
+  @Query("SELECT u.id FROM User u WHERE u.deleted = false AND u.notificationEnabled = true")
+  List<UUID> findAllActiveAndNotificationEnabledUserIds();
 }

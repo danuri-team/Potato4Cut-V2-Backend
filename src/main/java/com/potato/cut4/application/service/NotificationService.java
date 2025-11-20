@@ -41,8 +41,8 @@ public class NotificationService {
     List<String> fcmTokens;
 
     if (targetUserIds == null || targetUserIds.isEmpty()) {
-      userIds = userRepository.findAllActiveUserIds();
-      fcmTokens = userDeviceRepository.findAllActiveFcmTokens();
+      userIds = userRepository.findAllActiveAndNotificationEnabledUserIds();
+      fcmTokens = userDeviceRepository.findFcmTokens();
       log.info("Sending notification to all users: count={}", userIds.size());
     } else {
       userIds = targetUserIds;
@@ -65,7 +65,10 @@ public class NotificationService {
     notificationRepository.saveAll(notifications);
 
     if (!fcmTokens.isEmpty()) {
-      fcmService.sendMulticastNotification(fcmTokens, "4컷", content, null);
+      List<String> failedToken = fcmService.sendMulticastNotification(fcmTokens, "4컷", content,
+          null);
+
+      userDeviceRepository.deleteAllByTokenIn(failedToken);
     }
 
     log.info("Notifications sent successfully: type={}, recipients={}, fcmTokens={}",
@@ -105,4 +108,12 @@ public class NotificationService {
 
     return notificationRepository.countByUserAndIsReadFalse(user);
   }
+
+  public void updateNotificationEnabled(UUID userId) {
+    User user = userRepository.findByIdAndDeletedFalse(userId)
+        .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+
+    user.updateNotifiactionEnabled();
+  }
+
 }

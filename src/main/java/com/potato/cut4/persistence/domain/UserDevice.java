@@ -35,15 +35,6 @@ public class UserDevice {
   @Column(nullable = false, unique = true, length = 500)
   private String fcmToken;
 
-  @Column(length = 100)
-  private String deviceType; // iOS, Android
-
-  @Column(length = 100)
-  private String deviceModel;
-
-  @Column(nullable = false)
-  private boolean active = true;
-
   @CreationTimestamp
   @Column(nullable = false, updatable = false)
   private LocalDateTime createdAt;
@@ -53,18 +44,10 @@ public class UserDevice {
   private LocalDateTime updatedAt;
 
   @Builder
-  public UserDevice(User user, String fcmToken, String deviceType, String deviceModel) {
+  public UserDevice(User user, String fcmToken) {
     this.user = user;
     this.fcmToken = fcmToken;
-    this.deviceType = deviceType;
-    this.deviceModel = deviceModel;
   }
 
-  public void updateToken(String fcmToken) {
-    this.fcmToken = fcmToken;
-  }
 
-  public void deactivate() {
-    this.active = false;
-  }
 }
