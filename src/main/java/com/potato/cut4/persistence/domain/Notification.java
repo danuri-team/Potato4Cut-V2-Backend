@@ -65,6 +65,7 @@ public class Notification {
     this.actor = actor;
     this.type = type;
     this.content = content;
+    this.isRead = false;
     this.targetUrl = targetUrl;
   }
 

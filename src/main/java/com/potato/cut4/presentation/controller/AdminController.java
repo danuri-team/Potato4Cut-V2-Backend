@@ -1,7 +1,6 @@
 package com.potato.cut4.presentation.controller;
 
 import com.potato.cut4.application.service.CreatorService;
-import com.potato.cut4.application.service.FrameService;
 import com.potato.cut4.application.service.NotificationService;
 import com.potato.cut4.application.service.ReportService;
 import com.potato.cut4.common.dto.ApiResponse;
@@ -10,12 +9,11 @@ import com.potato.cut4.common.security.AuthenticationUtil;
 import com.potato.cut4.persistence.domain.Frame;
 import com.potato.cut4.persistence.domain.type.FrameStatus;
 import com.potato.cut4.persistence.repository.FrameRepository;
-import com.potato.cut4.persistence.repository.ReportRepository;
 import com.potato.cut4.presentation.dto.request.CreatorReviewRequest;
 import com.potato.cut4.presentation.dto.request.SendNotificationRequest;
-import jakarta.validation.Valid;
 import com.potato.cut4.presentation.dto.response.CreatorResponse;
 import com.potato.cut4.presentation.dto.response.FrameListResponse;
+import jakarta.validation.Valid;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -42,7 +40,6 @@ public class AdminController {
   private final CreatorService creatorService;
   private final FrameRepository frameRepository;
   private final ReportService reportService;
-  private final ReportRepository reportRepository;
   private final NotificationService notificationService;
 
   // 크리에이터 관리

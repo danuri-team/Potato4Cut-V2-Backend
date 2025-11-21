@@ -4,6 +4,7 @@ import com.potato.cut4.common.integration.dto.GoogleInfoResDto;
 import com.potato.cut4.common.integration.service.GoogleOauthInfoService;
 import com.potato.cut4.common.security.JwtTokenProvider;
 import com.potato.cut4.persistence.domain.User;
+import com.potato.cut4.persistence.domain.UserDevice;
 import com.potato.cut4.persistence.domain.type.UserRole;
 import com.potato.cut4.persistence.repository.UserDeviceRepository;
 import com.potato.cut4.persistence.repository.UserRepository;
@@ -49,6 +50,16 @@ public class AuthService {
       isNewUser = true;
       user.restore();
       log.info("User restored: userId={}, email={}", user.getId(), user.getEmail());
+    }
+
+    Optional<UserDevice> userDevice = userDeviceRepository.findByFcmToken(request.getDeviceToken());
+    if (userDevice.isEmpty()) {
+      userDeviceRepository.save(
+          UserDevice.builder()
+              .user(user)
+              .fcmToken(request.getDeviceToken())
+              .build()
+      );
     }
 
     String accessToken = jwtTokenProvider.createAccessToken(user.getId(), user.getRole());
