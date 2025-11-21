@@ -1,5 +1,6 @@
 package com.potato.cut4.common.integration.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.potato.cut4.common.integration.client.AppleOauthInfoFeignClient;
 import com.potato.cut4.common.integration.dto.AppleInfoResDto;
 import com.potato.cut4.common.integration.dto.ApplePublicKey;
@@ -40,10 +41,14 @@ public class AppleOauthInfoService {
 
   private Claims parseAndVerifyToken(String identityToken, ApplePublicKeys publicKeys) {
     try {
-      Map<String, Object> headers = Jwts.parser()
-          .build()
-          .parseSignedClaims(identityToken)
-          .getHeader();
+      String[] tokenParts = identityToken.split("\\.");
+      if (tokenParts.length != 3) {
+        throw new RuntimeException("잘못된 형식의 JWT 토큰입니다.");
+      }
+
+      String headerJson = new String(Base64.getUrlDecoder().decode(tokenParts[0]));
+      ObjectMapper objectMapper = new ObjectMapper();
+      Map<String, Object> headers = objectMapper.readValue(headerJson, Map.class);
 
       String kid = (String) headers.get("kid");
       String alg = (String) headers.get("alg");
