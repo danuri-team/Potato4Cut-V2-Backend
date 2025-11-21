@@ -1,6 +1,8 @@
 package com.potato.cut4.application.service;
 
+import com.potato.cut4.common.integration.dto.AppleInfoResDto;
 import com.potato.cut4.common.integration.dto.GoogleInfoResDto;
+import com.potato.cut4.common.integration.service.AppleOauthInfoService;
 import com.potato.cut4.common.integration.service.GoogleOauthInfoService;
 import com.potato.cut4.common.security.JwtTokenProvider;
 import com.potato.cut4.persistence.domain.User;
@@ -11,6 +13,7 @@ import com.potato.cut4.persistence.repository.UserRepository;
 import com.potato.cut4.presentation.dto.request.SocialLoginRequest;
 import com.potato.cut4.presentation.dto.response.AuthResponse;
 import com.potato.cut4.presentation.dto.response.TokenResponse;
+import java.util.Optional;
 import java.util.Random;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -27,17 +30,33 @@ public class AuthService {
   private final UserRepository userRepository;
   private final JwtTokenProvider jwtTokenProvider;
   private final GoogleOauthInfoService googleOauthInfoService;
+  private final AppleOauthInfoService appleOauthInfoService;
   private final UserDeviceRepository userDeviceRepository;
 
   private static final Random RANDOM = new Random();
 
   @Transactional
   public AuthResponse socialLogin(SocialLoginRequest request) {
-    GoogleInfoResDto oauthDto = googleOauthInfoService.login(request.getOauthToken());
+    String socialId;
+    String email;
+
+    switch (request.getProvider()) {
+      case GOOGLE -> {
+        GoogleInfoResDto googleInfo = googleOauthInfoService.login(request.getOauthToken());
+        socialId = googleInfo.id();
+        email = googleInfo.email();
+      }
+      case APPLE -> {
+        AppleInfoResDto appleInfo = appleOauthInfoService.login(request.getOauthToken());
+        socialId = appleInfo.id();
+        email = appleInfo.email();
+      }
+      default -> throw new IllegalArgumentException("지원하지 않는 소셜 로그인 제공자입니다.");
+    }
 
     User user = userRepository.findBySocialProviderAndSocialId(
             request.getProvider(),
-            oauthDto.id()
+            socialId
         )
         .orElse(null);
 
@@ -45,7 +64,7 @@ public class AuthService {
 
     if (user == null) {
       isNewUser = true;
-      user = createUser(request, oauthDto);
+      user = createUser(request, socialId, email);
     } else if (user.isDeleted()) {
       isNewUser = true;
       user.restore();
@@ -98,12 +117,12 @@ public class AuthService {
         .build();
   }
 
-  private User createUser(SocialLoginRequest request, GoogleInfoResDto oauthDto) {
+  private User createUser(SocialLoginRequest request, String socialId, String email) {
     User user = User.builder()
         .nickname("옹심이 " + RANDOM.nextInt(100000))
-        .email(oauthDto.email())
+        .email(email)
         .socialProvider(request.getProvider())
-        .socialId(oauthDto.id())
+        .socialId(socialId)
         .role(UserRole.USER)
         .build();
 
