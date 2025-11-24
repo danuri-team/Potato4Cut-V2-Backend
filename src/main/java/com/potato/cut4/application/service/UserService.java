@@ -4,8 +4,10 @@ import com.potato.cut4.common.exception.CustomException;
 import com.potato.cut4.common.exception.ErrorCode;
 import com.potato.cut4.common.service.FileUploadService;
 import com.potato.cut4.persistence.domain.Photo;
+import com.potato.cut4.persistence.domain.ProfilePreset;
 import com.potato.cut4.persistence.domain.User;
 import com.potato.cut4.persistence.repository.PhotoRepository;
+import com.potato.cut4.persistence.repository.ProfilePresetRepository;
 import com.potato.cut4.persistence.repository.UserRepository;
 import com.potato.cut4.presentation.dto.request.UpdateProfileRequest;
 import com.potato.cut4.presentation.dto.response.PhotoListResponse;
@@ -27,6 +29,7 @@ public class UserService {
   private final UserRepository userRepository;
   private final PhotoRepository photoRepository;
   private final FileUploadService fileUploadService;
+  private final ProfilePresetRepository profilePresetRepository;
 
   public User getUserById(UUID userId) {
     return userRepository.findByIdAndDeletedFalse(userId)
@@ -45,18 +48,24 @@ public class UserService {
       }
     }
 
-    // 프로필 이미지 업로드
     String profileImageUrl = user.getProfileImageUrl();
+
+    if (request.getProfilePresetId() != null) {
+      ProfilePreset profilePreset = profilePresetRepository.findById(request.getProfilePresetId())
+          .orElseThrow(() -> new CustomException(ErrorCode.PRESET_NOT_FOUND));
+      profileImageUrl = profilePreset.getImgUrl();
+    }
+
     if (profileImage != null && !profileImage.isEmpty()) {
-      // 기존 이미지 삭제
       if (profileImageUrl != null) {
         try {
-          fileUploadService.deleteImage(profileImageUrl);
+          if (!profilePresetRepository.existsProfilePresetByImgUrl(profileImageUrl)) {
+            fileUploadService.deleteImage(profileImageUrl);
+          }
         } catch (Exception e) {
           log.warn("Failed to delete old profile image: {}", profileImageUrl);
         }
       }
-      // 새 이미지 업로드
       profileImageUrl = fileUploadService.uploadImage(profileImage, "profiles");
     }
 

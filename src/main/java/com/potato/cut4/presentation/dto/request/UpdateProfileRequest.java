@@ -1,6 +1,7 @@
 package com.potato.cut4.presentation.dto.request;
 
 import jakarta.validation.constraints.Size;
+import java.util.UUID;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -13,4 +14,6 @@ public class UpdateProfileRequest {
 
   @Size(max = 500, message = "자기소개는 500자 이하여야 합니다.")
   private String bio;
+
+  private UUID profilePresetId;
 }
