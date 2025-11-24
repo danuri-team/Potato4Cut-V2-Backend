@@ -109,7 +109,7 @@ public class User {
     this.role = role;
   }
 
-  public void updateNotifiactionEnabled() {
+  public void updateNotificationEnabled() {
     this.notificationEnabled = !notificationEnabled;
   }
 

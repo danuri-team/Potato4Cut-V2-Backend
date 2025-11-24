@@ -113,7 +113,7 @@ public class NotificationService {
     User user = userRepository.findByIdAndDeletedFalse(userId)
         .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 
-    user.updateNotifiactionEnabled();
+    user.updateNotificationEnabled();
   }
 
 }
