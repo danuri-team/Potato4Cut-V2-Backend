@@ -88,6 +88,7 @@ public class AuthService {
         .userId(user.getId())
         .nickname(user.getNickname())
         .email(user.getEmail())
+        .provider(user.getSocialProvider())
         .profileImageUrl(user.getProfileImageUrl())
         .role(user.getRole())
         .token(TokenResponse.builder()
