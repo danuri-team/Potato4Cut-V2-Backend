@@ -3,16 +3,4 @@ FROM eclipse-temurin:21-jre-ubi9-minimal AS runtime
 ARG JAR_FILE=/build/libs/*.jar
 COPY ${JAR_FILE} app.jar
 
-ENTRYPOINT [
-"java",
-"-XX:+UseContainerSupport",
-"-XX:InitialRAMPercentage=60",
-"-XX:MinRAMPercentage=60",
-"-XX:MaxRAMPercentage=60",
-"-XX:+UseG1GC",
-"-XX:MaxGCPauseMillis=200",
-"-XX:MetaspaceSize=256m",
-"-XX:MaxMetaspaceSize=256m",
-"-Dspring.profiles.active=prod",
-"-jar","app.jar"
-]
+ENTRYPOINT ["java", "-XX:+UseContainerSupport", "-XX:InitialRAMPercentage=60", "-XX:MinRAMPercentage=60", "-XX:MaxRAMPercentage=60", "-XX:+UseG1GC", "-XX:MaxGCPauseMillis=200", "-XX:MetaspaceSize=256m", "-XX:MaxMetaspaceSize=256m", "-Dspring.profiles.active=prod", "-jar", "app.jar"]
