@@ -20,7 +20,7 @@ public class CommentResponse {
   private boolean isOwner;
 
   public static CommentResponse from(FrameComment comment, UUID currentUserId) {
-    boolean isOwner = currentUserId != null && comment.getUser().getId().equals(currentUserId);
+    boolean isOwner = comment.getUser().getId().equals(currentUserId);
 
     return CommentResponse.builder()
         .commentId(comment.getId())

@@ -5,8 +5,10 @@ import com.potato.cut4.common.dto.ApiResponse;
 import com.potato.cut4.common.dto.PageResponse;
 import com.potato.cut4.common.security.AuthenticationUtil;
 import com.potato.cut4.persistence.domain.User;
+import com.potato.cut4.presentation.dto.request.CreatePreSignedUrl;
 import com.potato.cut4.presentation.dto.request.UpdateProfileRequest;
 import com.potato.cut4.presentation.dto.response.PhotoListResponse;
+import com.potato.cut4.presentation.dto.response.PreSignedUrlResponse;
 import com.potato.cut4.presentation.dto.response.UserInfoResponse;
 import jakarta.validation.Valid;
 import java.util.UUID;
@@ -15,16 +17,15 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/api/v1/users")
@@ -32,6 +33,14 @@ import org.springframework.web.multipart.MultipartFile;
 public class UserController {
 
   private final UserService userService;
+
+  @PostMapping("/me/presigned-url")
+  public ResponseEntity<ApiResponse<PreSignedUrlResponse>> generateProfileImagePreSignedUrl(
+      @Valid @RequestBody CreatePreSignedUrl request
+  ) {
+    PreSignedUrlResponse response = userService.generateProfileImagePreSignedUrl(request);
+    return ResponseEntity.ok(ApiResponse.success(response, "PreSigned URL이 생성되었습니다."));
+  }
 
   @GetMapping("/me")
   public ResponseEntity<ApiResponse<UserInfoResponse>> getCurrentUser() {
@@ -51,13 +60,12 @@ public class UserController {
     return ResponseEntity.ok(ApiResponse.success(response));
   }
 
-  @PutMapping(value = "/me", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+  @PutMapping("/me")
   public ResponseEntity<ApiResponse<UserInfoResponse>> updateProfile(
-      @Valid @RequestPart(value = "data") UpdateProfileRequest request,
-      @RequestPart(value = "profileImage", required = false) MultipartFile profileImage) {
+      @Valid @RequestBody UpdateProfileRequest request) {
 
     UUID userId = AuthenticationUtil.getCurrentUserId();
-    User user = userService.updateProfile(userId, request, profileImage);
+    User user = userService.updateProfile(userId, request);
 
     UserInfoResponse response = UserInfoResponse.builder()
         .userId(user.getId())

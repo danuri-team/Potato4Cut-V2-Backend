@@ -18,10 +18,13 @@ public class FrameDetailResponse {
   private UUID frameId;
   private String title;
   private String description;
-  private String frameImageUrl;
+  private String frameBaseImageUrl;
+  private String frameOverlayImageUrl;
   private String previewImageUrl;
   private FrameCategory category;
   private FrameStatus status;
+  private int price;
+  private boolean isPublic;
   private long downloadCount;
   private long likeCount;
   private long viewCount;
@@ -35,14 +38,20 @@ public class FrameDetailResponse {
   private LocalDateTime approvedAt;
 
   public static FrameDetailResponse from(Frame frame, boolean isLiked, boolean isInLibrary) {
+    String frameBaseImageUrl = isInLibrary ? frame.getFrameBaseImageUrl() : null;
+    String frameOverlayImageUrl = isInLibrary ? frame.getFrameOverlayImageUrl() : null;
+
     return FrameDetailResponse.builder()
         .frameId(frame.getId())
         .title(frame.getTitle())
         .description(frame.getDescription())
-        .frameImageUrl(frame.getFrameImageUrl())
+        .frameBaseImageUrl(frameBaseImageUrl)
+        .frameOverlayImageUrl(frameOverlayImageUrl)
         .previewImageUrl(frame.getPreviewImageUrl())
         .category(frame.getCategory())
         .status(frame.getStatus())
+        .price(frame.getPrice())
+        .isPublic(frame.isPublic())
         .downloadCount(frame.getDownloadCount())
         .likeCount(frame.getLikeCount())
         .viewCount(frame.getViewCount())

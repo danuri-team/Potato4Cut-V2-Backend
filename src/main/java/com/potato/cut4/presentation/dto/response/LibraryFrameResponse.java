@@ -14,7 +14,8 @@ public class LibraryFrameResponse {
   private UUID frameId;
   private String title;
   private String previewImageUrl;
-  private String frameImageUrl;
+  private String frameBaseImageUrl;
+  private String frameOverlayImageUrl;
   private FrameCategory category;
   private boolean bookmarked;
   private LocalDateTime addedAt;
@@ -27,7 +28,8 @@ public class LibraryFrameResponse {
         .frameId(library.getFrame().getId())
         .title(library.getFrame().getTitle())
         .previewImageUrl(library.getFrame().getPreviewImageUrl())
-        .frameImageUrl(library.getFrame().getFrameImageUrl())
+        .frameBaseImageUrl(library.getFrame().getFrameBaseImageUrl())
+        .frameOverlayImageUrl(library.getFrame().getFrameOverlayImageUrl())
         .category(library.getFrame().getCategory())
         .bookmarked(library.isBookmarked())
         .addedAt(library.getAddedAt())

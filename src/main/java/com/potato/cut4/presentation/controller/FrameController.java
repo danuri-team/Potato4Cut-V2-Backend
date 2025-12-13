@@ -9,11 +9,13 @@ import com.potato.cut4.common.security.AuthenticationUtil;
 import com.potato.cut4.persistence.domain.type.FrameCategory;
 import com.potato.cut4.presentation.dto.request.CreateCommentRequest;
 import com.potato.cut4.presentation.dto.request.CreateFrameRequest;
+import com.potato.cut4.presentation.dto.request.CreatePreSignedUrl;
 import com.potato.cut4.presentation.dto.request.UpdateCommentRequest;
 import com.potato.cut4.presentation.dto.request.UpdateFrameRequest;
 import com.potato.cut4.presentation.dto.response.CommentResponse;
 import com.potato.cut4.presentation.dto.response.FrameDetailResponse;
 import com.potato.cut4.presentation.dto.response.FrameListResponse;
+import com.potato.cut4.presentation.dto.response.PreSignedUrlResponse;
 import jakarta.validation.Valid;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -21,7 +23,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -31,9 +32,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/api/v1/frames")
@@ -44,29 +43,39 @@ public class FrameController {
   private final FrameLikeService frameLikeService;
   private final FrameCommentService commentService;
 
-  @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+  @PostMapping("/presigned-url/frame")
+  public ResponseEntity<ApiResponse<PreSignedUrlResponse>> generateFrameImagePreSignedUrl(
+      @Valid @RequestBody CreatePreSignedUrl request
+  ) {
+    PreSignedUrlResponse response = frameService.generateFrameImagePreSignedUrl(request);
+    return ResponseEntity.ok(ApiResponse.success(response, "PreSigned URL이 생성되었습니다."));
+  }
+
+  @PostMapping("/presigned-url/preview")
+  public ResponseEntity<ApiResponse<PreSignedUrlResponse>> generatePreviewImagePreSignedUrl(
+      @Valid @RequestBody CreatePreSignedUrl request
+  ) {
+    PreSignedUrlResponse response = frameService.generatePreviewImagePreSignedUrl(request);
+    return ResponseEntity.ok(ApiResponse.success(response, "PreSigned URL이 생성되었습니다."));
+  }
+
+  @PostMapping
   public ResponseEntity<ApiResponse<FrameDetailResponse>> createFrame(
-      @Valid @RequestPart("data") CreateFrameRequest request,
-      @RequestPart("frameImage") MultipartFile frameImage,
-      @RequestPart("previewImage") MultipartFile previewImage) {
+      @Valid @RequestBody CreateFrameRequest request) {
 
     UUID userId = AuthenticationUtil.getCurrentUserId();
-    FrameDetailResponse response = frameService.createFrame(userId, request, frameImage,
-        previewImage);
+    FrameDetailResponse response = frameService.createFrame(userId, request);
 
     return ResponseEntity.ok(ApiResponse.success(response, "프레임이 등록되었습니다. 검수 후 공개됩니다."));
   }
 
-  @PutMapping(value = "/{frameId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+  @PutMapping("/{frameId}")
   public ResponseEntity<ApiResponse<FrameDetailResponse>> updateFrame(
       @PathVariable UUID frameId,
-      @Valid @RequestPart("data") UpdateFrameRequest request,
-      @RequestPart(value = "frameImage", required = false) MultipartFile frameImage,
-      @RequestPart(value = "previewImage", required = false) MultipartFile previewImage) {
+      @Valid @RequestBody UpdateFrameRequest request) {
 
     UUID userId = AuthenticationUtil.getCurrentUserId();
-    FrameDetailResponse response = frameService.updateFrame(userId, frameId, request, frameImage,
-        previewImage);
+    FrameDetailResponse response = frameService.updateFrame(userId, frameId, request);
 
     return ResponseEntity.ok(ApiResponse.success(response, "프레임이 수정되었습니다."));
   }

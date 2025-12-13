@@ -9,8 +9,10 @@ import com.potato.cut4.persistence.domain.User;
 import com.potato.cut4.persistence.repository.PhotoRepository;
 import com.potato.cut4.persistence.repository.ProfilePresetRepository;
 import com.potato.cut4.persistence.repository.UserRepository;
+import com.potato.cut4.presentation.dto.request.CreatePreSignedUrl;
 import com.potato.cut4.presentation.dto.request.UpdateProfileRequest;
 import com.potato.cut4.presentation.dto.response.PhotoListResponse;
+import com.potato.cut4.presentation.dto.response.PreSignedUrlResponse;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,7 +20,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
 
 @Slf4j
 @Service
@@ -36,9 +37,12 @@ public class UserService {
         .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
   }
 
+  public PreSignedUrlResponse generateProfileImagePreSignedUrl(CreatePreSignedUrl request) {
+    return fileUploadService.generatePreSignedUrlForUpload("profiles", request.fileSize());
+  }
+
   @Transactional
-  public User updateProfile(UUID userId, UpdateProfileRequest request,
-      MultipartFile profileImage) {
+  public User updateProfile(UUID userId, UpdateProfileRequest request) {
     User user = getUserById(userId);
 
     // 닉네임 중복 체크
@@ -56,7 +60,7 @@ public class UserService {
       profileImageUrl = profilePreset.getImgUrl();
     }
 
-    if (profileImage != null && !profileImage.isEmpty()) {
+    if (request.getProfileImageKey() != null) {
       if (profileImageUrl != null) {
         try {
           if (!profilePresetRepository.existsProfilePresetByImgUrl(profileImageUrl)) {
@@ -66,7 +70,7 @@ public class UserService {
           log.warn("Failed to delete old profile image: {}", profileImageUrl);
         }
       }
-      profileImageUrl = fileUploadService.uploadImage(profileImage, "profiles");
+      profileImageUrl = fileUploadService.buildImageUrl(request.getProfileImageKey());
     }
 
     user.updateProfile(request.getNickname(), profileImageUrl, request.getBio());

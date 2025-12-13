@@ -14,9 +14,11 @@ import com.potato.cut4.persistence.repository.FrameRepository;
 import com.potato.cut4.persistence.repository.UserFrameLibraryRepository;
 import com.potato.cut4.persistence.repository.UserRepository;
 import com.potato.cut4.presentation.dto.request.CreateFrameRequest;
+import com.potato.cut4.presentation.dto.request.CreatePreSignedUrl;
 import com.potato.cut4.presentation.dto.request.UpdateFrameRequest;
 import com.potato.cut4.presentation.dto.response.FrameDetailResponse;
 import com.potato.cut4.presentation.dto.response.FrameListResponse;
+import com.potato.cut4.presentation.dto.response.PreSignedUrlResponse;
 import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -25,7 +27,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
 
 @Slf4j
 @Service
@@ -41,27 +42,39 @@ public class FrameService {
   private final CreatorService creatorService;
   private final TagService tagService;
 
+  public PreSignedUrlResponse generateFrameImagePreSignedUrl(CreatePreSignedUrl request) {
+    return fileUploadService.generatePreSignedUrlForUpload("frames", request.fileSize());
+  }
+
+  public PreSignedUrlResponse generatePreviewImagePreSignedUrl(CreatePreSignedUrl request) {
+    return fileUploadService.generatePreSignedUrlForUpload("previews", request.fileSize());
+  }
+
   @Transactional
-  public FrameDetailResponse createFrame(UUID userId, CreateFrameRequest request,
-      MultipartFile frameImage, MultipartFile previewImage) {
+  public FrameDetailResponse createFrame(UUID userId, CreateFrameRequest request) {
 
     // 크리에이터 권한 확인
     creatorService.validateCreatorAccess(userId);
     Creator creator = creatorService.getCreatorByUserId(userId);
 
-    // 이미지 업로드
-    String frameImageUrl = fileUploadService.uploadImage(frameImage, "frames");
-    String previewImageUrl = fileUploadService.uploadImage(previewImage, "previews");
+    // 이미지 URL 생성
+    String frameBaseImageUrl = fileUploadService.buildImageUrl(request.getFrameBaseImageKey());
+    String frameOverlayImageUrl = fileUploadService.buildImageUrl(
+        request.getFrameOverlayImageKey());
+    String previewImageUrl = fileUploadService.buildImageUrl(request.getPreviewImageKey());
 
     // 프레임 생성
     Frame frame = Frame.builder()
         .creator(creator)
         .title(request.getTitle())
         .description(request.getDescription())
-        .frameImageUrl(frameImageUrl)
+        .frameBaseImageUrl(frameBaseImageUrl)
+        .frameOverlayImageUrl(frameOverlayImageUrl)
         .previewImageUrl(previewImageUrl)
         .category(request.getCategory())
         .status(FrameStatus.PENDING)
+        .price(request.getPrice())
+        .isPublic(request.getIsPublic())
         .build();
 
     frame = frameRepository.save(frame);
@@ -74,27 +87,33 @@ public class FrameService {
   }
 
   @Transactional
-  public FrameDetailResponse updateFrame(UUID userId, UUID frameId, UpdateFrameRequest request,
-      MultipartFile frameImage, MultipartFile previewImage) {
+  public FrameDetailResponse updateFrame(UUID userId, UUID frameId, UpdateFrameRequest request) {
 
     Creator creator = creatorService.getCreatorByUserId(userId);
     Frame frame = frameRepository.findByIdAndCreator(frameId, creator)
         .orElseThrow(() -> new CustomException(ErrorCode.FRAME_ACCESS_DENIED));
 
-    // 이미지 업데이트
-    if (frameImage != null && !frameImage.isEmpty()) {
-      fileUploadService.deleteImage(frame.getFrameImageUrl());
-      fileUploadService.uploadImage(frameImage, "frames");
-      frame.updateInfo(request.getTitle(), request.getDescription(), request.getCategory());
+    if (request.getFrameBaseImageKey() != null) {
+      fileUploadService.deleteImage(frame.getFrameBaseImageUrl());
+      String newUrl = fileUploadService.buildImageUrl(request.getFrameBaseImageKey());
+      frame.updateFrameBaseImageUrl(newUrl);
     }
 
-    if (previewImage != null && !previewImage.isEmpty()) {
+    if (request.getFrameOverlayImageKey() != null) {
+      fileUploadService.deleteImage(frame.getFrameOverlayImageUrl());
+      String newUrl = fileUploadService.buildImageUrl(request.getFrameOverlayImageKey());
+      frame.updateFrameOverlayImageUrl(newUrl);
+    }
+
+    if (request.getPreviewImageKey() != null) {
       fileUploadService.deleteImage(frame.getPreviewImageUrl());
-      fileUploadService.uploadImage(previewImage, "previews");
+      String newUrl = fileUploadService.buildImageUrl(request.getPreviewImageKey());
+      frame.updatePreviewImageUrl(newUrl);
     }
 
     // 프레임 정보 업데이트
-    frame.updateInfo(request.getTitle(), request.getDescription(), request.getCategory());
+    frame.updateInfo(request.getTitle(), request.getDescription(), request.getCategory(),
+        request.getPrice(), request.getIsPublic());
 
     // 태그 업데이트
     if (request.getTags() != null) {
@@ -107,9 +126,8 @@ public class FrameService {
         .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 
     boolean isLiked = frameLikeRepository.existsByUserAndFrame(user, frame);
-    boolean isInLibrary = libraryRepository.existsByUserAndFrame(user, frame);
 
-    return FrameDetailResponse.from(frame, isLiked, isInLibrary);
+    return FrameDetailResponse.from(frame, isLiked, true);
   }
 
   @Transactional
@@ -118,7 +136,8 @@ public class FrameService {
     Frame frame = frameRepository.findByIdAndCreator(frameId, creator)
         .orElseThrow(() -> new CustomException(ErrorCode.FRAME_ACCESS_DENIED));
 
-    fileUploadService.deleteImage(frame.getFrameImageUrl());
+    fileUploadService.deleteImage(frame.getFrameBaseImageUrl());
+    fileUploadService.deleteImage(frame.getFrameOverlayImageUrl());
     fileUploadService.deleteImage(frame.getPreviewImageUrl());
 
     frame.hide();
@@ -130,9 +149,11 @@ public class FrameService {
     Page<Frame> frames;
 
     if (category != null) {
-      frames = frameRepository.findByStatusAndCategory(FrameStatus.APPROVED, category, pageable);
+      frames = frameRepository.findByStatusAndCategoryAndIsPublicTrue(FrameStatus.APPROVED,
+          category,
+          pageable);
     } else {
-      frames = frameRepository.findByStatus(FrameStatus.APPROVED, pageable);
+      frames = frameRepository.findByStatusAndIsPublicTrue(FrameStatus.APPROVED, pageable);
     }
 
     return frames.map(FrameListResponse::from);
