@@ -17,5 +17,5 @@ public class UpdateProfileRequest {
 
   private UUID profilePresetId;
 
-  private String profileImageKey; // optional
+  private String profileImageKey;
 }
