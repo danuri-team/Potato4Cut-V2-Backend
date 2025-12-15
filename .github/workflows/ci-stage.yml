@@ -85,7 +85,7 @@ jobs:
 
       - name: Update Kubernetes resources
         run: |
-          cd danuri-devops/potato-4-cut/overlays/production/
+          cd danuri-devops/potato-4-cut/overlays/stage/
           kustomize edit set image ${{ env.IMAGE_NAME }}:${{ steps.image.outputs.version }}
           cat kustomization.yaml
 
