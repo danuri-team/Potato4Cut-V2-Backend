@@ -38,10 +38,13 @@ spring:
       max-request-size: 10MB
 
 management:
+  metrics:
+    tags:
+      application: ${spring.application.name}
   endpoints:
     web:
       exposure:
-        include: "prometheus"
+        include: "*"
   server:
     port: 8081
 
