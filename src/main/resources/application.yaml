@@ -25,7 +25,7 @@ spring:
       max-request-size: 10MB
 
   flyway:
-    enabled: false
+    enabled: true
     baseline-on-migrate: true
 
 management:
