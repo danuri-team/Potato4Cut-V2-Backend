@@ -40,8 +40,7 @@ public class PhotoController {
       @Valid @RequestBody CreatePhotoRequest request
   ) {
     UUID userId = AuthenticationUtil.getCurrentUserId();
-    PhotoResponse response = photoService.savePhoto(userId, request.getFrameId(),
-        request.getObjectKey());
+    PhotoResponse response = photoService.savePhoto(userId, request);
 
     return ResponseEntity.ok(ApiResponse.success(response, "4컷 사진이 저장되었습니다."));
   }

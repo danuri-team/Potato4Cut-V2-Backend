@@ -3,15 +3,21 @@ package com.potato.cut4.application.service;
 import com.potato.cut4.common.exception.CustomException;
 import com.potato.cut4.common.exception.ErrorCode;
 import com.potato.cut4.common.service.FileUploadService;
+import com.potato.cut4.common.util.ShortCodeGenerator;
 import com.potato.cut4.persistence.domain.Frame;
 import com.potato.cut4.persistence.domain.Photo;
+import com.potato.cut4.persistence.domain.Share;
 import com.potato.cut4.persistence.domain.User;
+import com.potato.cut4.persistence.domain.type.PhotoShareType;
 import com.potato.cut4.persistence.repository.FrameRepository;
 import com.potato.cut4.persistence.repository.PhotoRepository;
+import com.potato.cut4.persistence.repository.ShareRepository;
 import com.potato.cut4.persistence.repository.UserRepository;
+import com.potato.cut4.presentation.dto.request.CreatePhotoRequest;
 import com.potato.cut4.presentation.dto.request.CreatePreSignedUrl;
 import com.potato.cut4.presentation.dto.response.PhotoResponse;
 import com.potato.cut4.presentation.dto.response.PreSignedUrlResponse;
+import java.time.LocalDateTime;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -27,6 +33,7 @@ public class PhotoService {
   private final PhotoRepository photoRepository;
   private final UserRepository userRepository;
   private final FrameRepository frameRepository;
+  private final ShareRepository shareRepository;
   private final FileUploadService fileUploadService;
 
   public PreSignedUrlResponse generatePreSignedUrl(CreatePreSignedUrl request) {
@@ -34,18 +41,18 @@ public class PhotoService {
   }
 
   @Transactional
-  public PhotoResponse savePhoto(UUID userId, UUID frameId, String objectKey) {
+  public PhotoResponse savePhoto(UUID userId, CreatePhotoRequest request) {
 
     User user = userRepository.findByIdAndDeletedFalse(userId)
         .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 
     Frame frame = null;
-    if (frameId != null) {
-      frame = frameRepository.findById(frameId)
+    if (request.getFrameId() != null) {
+      frame = frameRepository.findById(request.getFrameId())
           .orElseThrow(() -> new CustomException(ErrorCode.FRAME_NOT_FOUND));
     }
 
-    String composedImageUrl = fileUploadService.buildImageUrl(objectKey);
+    String composedImageUrl = fileUploadService.buildImageUrl(request.getObjectKey());
 
     Photo photo = Photo.builder()
         .user(user)
@@ -55,10 +62,25 @@ public class PhotoService {
 
     photo = photoRepository.save(photo);
 
-    log.info("Photo saved: photoId={}, userId={}, frameId={}", photo.getId(), userId, frameId);
+    Share share = Share.builder()
+        .photo(photo)
+        .type(request.getPhotoShareType())
+        .expireAt(LocalDateTime.now().plusMinutes(request.getExpireAt()))
+        .code(request.getPhotoShareType() == PhotoShareType.LINK
+            ? ShortCodeGenerator.generate(5)
+            : null)
+        .build();
+
+    shareRepository.save(share);
+
+    photo.setShare(share);
+
+    log.info("Photo saved: photoId={}, userId={}, frameId={}",
+        photo.getId(), userId, request.getFrameId());
 
     return PhotoResponse.from(photo);
   }
+
 
   @Transactional
   public void deletePhoto(UUID userId, UUID photoId) {
