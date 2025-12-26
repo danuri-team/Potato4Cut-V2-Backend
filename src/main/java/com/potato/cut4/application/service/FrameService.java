@@ -83,7 +83,7 @@ public class FrameService {
 
     log.info("Frame created: frameId={}, creatorId={}", frame.getId(), creator.getId());
 
-    return FrameDetailResponse.from(frame, false, false);
+    return FrameDetailResponse.from(frame, false, true);
   }
 
   @Transactional
