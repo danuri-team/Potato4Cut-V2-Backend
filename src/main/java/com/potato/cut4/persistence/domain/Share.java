@@ -28,7 +28,7 @@ public class Share {
   @GeneratedValue(strategy = GenerationType.UUID)
   private UUID id;
 
-  @Column(nullable = false, unique = true, length = 10)
+  @Column(unique = true, length = 10)
   private String code;
 
   @OneToOne

@@ -19,7 +19,7 @@ public class CreatePhotoRequest {
 
   private PhotoShareType photoShareType;
 
-  @Min(1)
+  @Min(0)
   @Max(10080)
   private int expireAt;
 }
