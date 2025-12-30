@@ -39,6 +39,7 @@ public class FrameService {
   private final FrameLikeRepository frameLikeRepository;
   private final UserFrameLibraryRepository libraryRepository;
   private final FileUploadService fileUploadService;
+  private final UserFrameLibraryService libraryService;
   private final CreatorService creatorService;
   private final TagService tagService;
 
@@ -80,6 +81,8 @@ public class FrameService {
     frame = frameRepository.save(frame);
 
     tagService.addTagsToFrame(frame, request.getTags());
+
+    libraryService.addToLibrary(userId, frame.getId());
 
     log.info("Frame created: frameId={}, creatorId={}", frame.getId(), creator.getId());
 
