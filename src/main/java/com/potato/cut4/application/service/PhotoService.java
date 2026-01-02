@@ -52,12 +52,12 @@ public class PhotoService {
           .orElseThrow(() -> new CustomException(ErrorCode.FRAME_NOT_FOUND));
     }
 
-    String composedImageUrl = fileUploadService.buildImageUrl(request.getObjectKey());
+    String imageUrl = fileUploadService.buildImageUrl(request.getObjectKey());
 
     Photo photo = Photo.builder()
         .user(user)
         .frame(frame)
-        .composedImageUrl(composedImageUrl)
+        .imageUrl(imageUrl)
         .build();
 
     photo = photoRepository.save(photo);
@@ -91,7 +91,7 @@ public class PhotoService {
       throw new CustomException(ErrorCode.PHOTO_ACCESS_DENIED);
     }
 
-    fileUploadService.deleteImage(photo.getComposedImageUrl());
+    fileUploadService.deleteImage(photo.getImageUrl());
 
     photo.delete();
 

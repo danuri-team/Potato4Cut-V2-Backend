@@ -13,7 +13,7 @@ import lombok.Getter;
 public class PhotoListResponse {
 
   private UUID photoId;
-  private String composedImageUrl;
+  private String imageUrl;
   private UUID frameId;
   private String frameTitle;
   private LocalDateTime createdAt;
@@ -21,7 +21,7 @@ public class PhotoListResponse {
   public static PhotoListResponse from(Photo photo) {
     return PhotoListResponse.builder()
         .photoId(photo.getId())
-        .composedImageUrl(photo.getComposedImageUrl())
+        .imageUrl(photo.getImageUrl())
         .frameId(photo.getFrame() != null ? photo.getFrame().getId() : null)
         .frameTitle(
             Optional.ofNullable(photo.getFrame())

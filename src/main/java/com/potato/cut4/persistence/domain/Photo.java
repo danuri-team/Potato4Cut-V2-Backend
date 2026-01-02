@@ -39,7 +39,7 @@ public class Photo {
   private Frame frame;
 
   @Column(nullable = false, length = 500)
-  private String composedImageUrl;
+  private String imageUrl;
 
   @Column(nullable = false)
   private boolean deleted = false;
@@ -53,11 +53,11 @@ public class Photo {
   private LocalDateTime createdAt;
 
   @Builder
-  public Photo(User user, Frame frame, String composedImageUrl, Share share) {
+  public Photo(User user, Frame frame, String imageUrl, Share share) {
     this.user = user;
     this.share = share;
     this.frame = frame;
-    this.composedImageUrl = composedImageUrl;
+    this.imageUrl = imageUrl;
   }
 
   public void delete() {

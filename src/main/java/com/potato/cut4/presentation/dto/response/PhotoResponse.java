@@ -14,7 +14,7 @@ import lombok.Getter;
 public class PhotoResponse {
 
   private UUID photoId;
-  private String composedImageUrl;
+  private String imageUrl;
   private UUID frameId;
   private String frameTitle;
   private LocalDateTime shareExpireAt;
@@ -24,7 +24,7 @@ public class PhotoResponse {
   public static PhotoResponse from(Photo photo) {
     return PhotoResponse.builder()
         .photoId(photo.getId())
-        .composedImageUrl(photo.getComposedImageUrl())
+        .imageUrl(photo.getImageUrl())
         .frameId(Optional.ofNullable(photo.getFrame())
             .map(Frame::getId)
             .orElse(null)
