@@ -26,8 +26,8 @@ public class FileUploadService {
   private final R2Config r2Config;
 
   private static final long MAX_FILE_SIZE = 10485760; // 10MB
-  private static final String DEFAULT_FILE_TYPE = ".jpg";
-  private static final String DEFAULT_CONTENT_TYPE = "image/jpeg";
+  private static final String DEFAULT_FILE_TYPE = ".png";
+  private static final String DEFAULT_CONTENT_TYPE = "image/png";
   private static final Duration DEFAULT_EXPIRE_TIME = Duration.ofMinutes(30);
 
   public void deleteImage(String imageUrl) {
