@@ -132,8 +132,8 @@ public class AuthService {
 
     userRepository.save(user);
 
-    frameService.addToLibrary(UUID.fromString("10000000-0000-0000-0000-000000000001"),
-        user.getId());
+    frameService.addToLibrary(user.getId(),
+        UUID.fromString("10000000-0000-0000-0000-000000000001"));
 
     return user;
   }
