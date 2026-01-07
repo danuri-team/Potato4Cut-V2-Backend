@@ -17,6 +17,8 @@ public class FrameListResponse {
   private String previewImageUrl;
   private FrameCategory category;
   private FrameStatus status;
+  private int price;
+  private boolean isPublic;
   private long downloadCount;
   private long likeCount;
   private long viewCount;
@@ -31,6 +33,8 @@ public class FrameListResponse {
         .previewImageUrl(frame.getPreviewImageUrl())
         .category(frame.getCategory())
         .status(frame.getStatus())
+        .price(frame.getPrice())
+        .isPublic(frame.isPublic())
         .downloadCount(frame.getDownloadCount())
         .likeCount(frame.getLikeCount())
         .viewCount(frame.getViewCount())

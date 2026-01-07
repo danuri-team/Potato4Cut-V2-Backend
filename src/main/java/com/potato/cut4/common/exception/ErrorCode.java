@@ -61,7 +61,11 @@ public enum ErrorCode {
   NOTIFICATION_NOT_FOUND(HttpStatus.NOT_FOUND, "N001", "알림을 찾을 수 없습니다."),
 
   // Preset
-  PRESET_NOT_FOUND(HttpStatus.NOT_FOUND, "P001", "지정한 프리셋을 찾을 수 없습니다.");
+  PRESET_NOT_FOUND(HttpStatus.NOT_FOUND, "P001", "지정한 프리셋을 찾을 수 없습니다."),
+
+  // Share
+  EXPIRED_CODE(HttpStatus.FORBIDDEN, "S001", "만료 된 공유 코드입니다."),
+  IS_PRIVATE(HttpStatus.FORBIDDEN, "S002", "비공개 처리 된 사진입니다.");
 
   private final HttpStatus status;
   private final String code;

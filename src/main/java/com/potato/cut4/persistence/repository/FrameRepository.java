@@ -14,16 +14,20 @@ import org.springframework.data.repository.query.Param;
 
 public interface FrameRepository extends JpaRepository<Frame, UUID> {
 
-  Page<Frame> findByStatus(FrameStatus status, Pageable pageable);
+  // 공개 프레임 조회 (일반 사용자용)
+  Page<Frame> findByStatusAndIsPublicTrue(FrameStatus status, Pageable pageable);
 
-  Page<Frame> findByStatusAndCategory(FrameStatus status, FrameCategory category,
+  Page<Frame> findByStatusAndCategoryAndIsPublicTrue(FrameStatus status, FrameCategory category,
       Pageable pageable);
+
+  // 전체 프레임 조회 (관리자용)
+  Page<Frame> findByStatus(FrameStatus status, Pageable pageable);
 
   Page<Frame> findByCreator(Creator creator, Pageable pageable);
 
   Optional<Frame> findByIdAndCreator(UUID id, Creator creator);
 
-  @Query("SELECT f FROM Frame f WHERE f.status = :status AND "
+  @Query("SELECT f FROM Frame f WHERE f.status = :status AND f.isPublic = true AND "
       + "(LOWER(f.title) LIKE LOWER(CONCAT('%', :keyword, '%')) OR "
       + "LOWER(f.description) LIKE LOWER(CONCAT('%', :keyword, '%')))")
   Page<Frame> searchByKeyword(@Param("status") FrameStatus status,
@@ -32,7 +36,7 @@ public interface FrameRepository extends JpaRepository<Frame, UUID> {
   @Query("SELECT f FROM Frame f "
       + "JOIN f.frameTags ft "
       + "JOIN ft.tag t "
-      + "WHERE f.status = :status AND t.name = :tagName")
+      + "WHERE f.status = :status AND f.isPublic = true AND t.name = :tagName")
   Page<Frame> findByStatusAndTagName(@Param("status") FrameStatus status,
       @Param("tagName") String tagName, Pageable pageable);
 }

@@ -1,6 +1,7 @@
 package com.potato.cut4.presentation.dto.response;
 
 import com.potato.cut4.persistence.domain.Notification;
+import com.potato.cut4.persistence.domain.User;
 import com.potato.cut4.persistence.domain.type.NotificationType;
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -23,6 +24,8 @@ public class NotificationResponse {
   private String actorProfileImageUrl;
 
   public static NotificationResponse from(Notification notification) {
+    User actor = notification.getActor();
+
     return NotificationResponse.builder()
         .notificationId(notification.getId())
         .type(notification.getType())
@@ -31,11 +34,9 @@ public class NotificationResponse {
         .isRead(notification.isRead())
         .createdAt(notification.getCreatedAt())
         .readAt(notification.getReadAt())
-        .actorId(notification.getActor() != null ? notification.getActor().getId() : null)
-        .actorNickname(
-            notification.getActor() != null ? notification.getActor().getNickname() : null)
-        .actorProfileImageUrl(
-            notification.getActor() != null ? notification.getActor().getProfileImageUrl() : null)
+        .actorId(actor != null ? actor.getId() : null)
+        .actorNickname(actor != null ? actor.getNickname() : null)
+        .actorProfileImageUrl(actor != null ? actor.getProfileImageUrl() : null)
         .build();
   }
 }

@@ -3,26 +3,26 @@ package com.potato.cut4.application.service;
 import com.potato.cut4.common.exception.CustomException;
 import com.potato.cut4.common.exception.ErrorCode;
 import com.potato.cut4.common.service.FileUploadService;
+import com.potato.cut4.common.util.ShortCodeGenerator;
 import com.potato.cut4.persistence.domain.Frame;
 import com.potato.cut4.persistence.domain.Photo;
-import com.potato.cut4.persistence.domain.PhotoCut;
-import com.potato.cut4.persistence.domain.PhotoCutTemp;
+import com.potato.cut4.persistence.domain.Share;
 import com.potato.cut4.persistence.domain.User;
+import com.potato.cut4.persistence.domain.type.PhotoShareType;
 import com.potato.cut4.persistence.repository.FrameRepository;
-import com.potato.cut4.persistence.repository.PhotoCutRepository;
-import com.potato.cut4.persistence.repository.PhotoCutTempRepository;
 import com.potato.cut4.persistence.repository.PhotoRepository;
+import com.potato.cut4.persistence.repository.ShareRepository;
 import com.potato.cut4.persistence.repository.UserRepository;
-import com.potato.cut4.presentation.dto.response.PhotoCutResponse;
+import com.potato.cut4.presentation.dto.request.CreatePhotoRequest;
+import com.potato.cut4.presentation.dto.request.CreatePreSignedUrl;
 import com.potato.cut4.presentation.dto.response.PhotoResponse;
-import java.util.ArrayList;
-import java.util.List;
+import com.potato.cut4.presentation.dto.response.PreSignedUrlResponse;
+import java.time.LocalDateTime;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
 
 @Slf4j
 @Service
@@ -31,99 +31,56 @@ import org.springframework.web.multipart.MultipartFile;
 public class PhotoService {
 
   private final PhotoRepository photoRepository;
-  private final PhotoCutRepository photoCutRepository;
-  private final PhotoCutTempRepository photoCutTempRepository;
   private final UserRepository userRepository;
   private final FrameRepository frameRepository;
+  private final ShareRepository shareRepository;
   private final FileUploadService fileUploadService;
 
-  @Transactional
-  public List<PhotoCutResponse> uploadPhotoCuts(UUID userId, List<MultipartFile> cutImages) {
-    User user = userRepository.findByIdAndDeletedFalse(userId)
-        .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
-
-    List<PhotoCutResponse> responses = new ArrayList<>();
-
-    for (int i = 0; i < cutImages.size(); i++) {
-      MultipartFile file = cutImages.get(i);
-      String imageUrl = fileUploadService.uploadImage(file, "photo-cuts");
-
-      PhotoCutTemp temp = PhotoCutTemp.builder()
-          .user(user)
-          .cutOrder(i + 1)
-          .originalImageUrl(imageUrl)
-          .build();
-
-      temp = photoCutTempRepository.save(temp);
-
-      PhotoCutResponse response = PhotoCutResponse.builder()
-          .cutId(temp.getId())
-          .cutOrder(temp.getCutOrder())
-          .originalImageUrl(temp.getOriginalImageUrl())
-          .build();
-
-      responses.add(response);
-    }
-
-    log.info("Photo cuts uploaded: userId={}, count={}", userId, cutImages.size());
-
-    return responses;
+  public PreSignedUrlResponse generatePreSignedUrl(CreatePreSignedUrl request) {
+    return fileUploadService.generatePreSignedUrlForUpload("photos", request.fileSize());
   }
 
   @Transactional
-  public PhotoResponse savePhoto(UUID userId, UUID frameId, MultipartFile composedImage,
-      List<UUID> photoCutIds) {
+  public PhotoResponse savePhoto(UUID userId, CreatePhotoRequest request) {
 
     User user = userRepository.findByIdAndDeletedFalse(userId)
         .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 
     Frame frame = null;
-    if (frameId != null) {
-      frame = frameRepository.findById(frameId)
+    if (request.getFrameId() != null) {
+      frame = frameRepository.findById(request.getFrameId())
           .orElseThrow(() -> new CustomException(ErrorCode.FRAME_NOT_FOUND));
     }
 
-    List<PhotoCutTemp> tempCuts = photoCutTempRepository.findByIdIn(photoCutIds);
-    if (tempCuts.size() != photoCutIds.size()) {
-      throw new CustomException(ErrorCode.INVALID_INPUT_VALUE, "유효하지 않은 사진 ID가 포함되어 있습니다.");
-    }
-
-    // 권한 확인: 모든 임시 사진이 현재 사용자의 것인지
-    boolean allBelongsToUser = tempCuts.stream()
-        .allMatch(temp -> temp.getUser().getId().equals(userId));
-    if (!allBelongsToUser) {
-      throw new CustomException(ErrorCode.FORBIDDEN, "다른 사용자의 사진을 사용할 수 없습니다.");
-    }
-
-    String composedImageUrl = fileUploadService.uploadImage(composedImage, "photos");
+    String imageUrl = fileUploadService.buildImageUrl(request.getObjectKey());
 
     Photo photo = Photo.builder()
         .user(user)
         .frame(frame)
-        .composedImageUrl(composedImageUrl)
+        .imageUrl(imageUrl)
         .build();
 
     photo = photoRepository.save(photo);
 
-    for (PhotoCutTemp temp : tempCuts) {
-      PhotoCut photoCut = PhotoCut.builder()
-          .photo(photo)
-          .cutOrder(temp.getCutOrder())
-          .originalImageUrl(temp.getOriginalImageUrl())
-          .build();
+    Share share = Share.builder()
+        .photo(photo)
+        .type(request.getPhotoShareType())
+        .expireAt(LocalDateTime.now().plusMinutes(request.getExpireAt()))
+        .code(request.getPhotoShareType() == PhotoShareType.LINK
+            ? ShortCodeGenerator.generate(5)
+            : null)
+        .build();
 
-      photoCutRepository.save(photoCut);
-    }
+    shareRepository.save(share);
 
-    photoCutTempRepository.deleteAll(tempCuts);
+    photo.setShare(share);
 
-    log.info("Photo saved: photoId={}, userId={}, frameId={}", photo.getId(), userId, frameId);
+    log.info("Photo saved: photoId={}, userId={}, frameId={}",
+        photo.getId(), userId, request.getFrameId());
 
-    Photo savedPhoto = photoRepository.findByIdAndDeletedFalseWithCuts(photo.getId())
-        .orElseThrow(() -> new CustomException(ErrorCode.PHOTO_NOT_FOUND));
-
-    return PhotoResponse.from(savedPhoto);
+    return PhotoResponse.from(photo);
   }
+
 
   @Transactional
   public void deletePhoto(UUID userId, UUID photoId) {
@@ -134,10 +91,7 @@ public class PhotoService {
       throw new CustomException(ErrorCode.PHOTO_ACCESS_DENIED);
     }
 
-    fileUploadService.deleteImage(photo.getComposedImageUrl());
-    for (PhotoCut cut : photo.getPhotoCuts()) {
-      fileUploadService.deleteImage(cut.getOriginalImageUrl());
-    }
+    fileUploadService.deleteImage(photo.getImageUrl());
 
     photo.delete();
 
@@ -145,7 +99,7 @@ public class PhotoService {
   }
 
   public PhotoResponse getPhoto(UUID userId, UUID photoId) {
-    Photo photo = photoRepository.findByIdAndDeletedFalseWithCuts(photoId)
+    Photo photo = photoRepository.findByIdAndDeletedFalse(photoId)
         .orElseThrow(() -> new CustomException(ErrorCode.PHOTO_NOT_FOUND));
 
     if (!photo.getUser().getId().equals(userId)) {

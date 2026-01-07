@@ -28,6 +28,8 @@ import org.springframework.transaction.annotation.Transactional;
 public class AuthService {
 
   private final UserRepository userRepository;
+  private final UserFrameLibraryService frameService;
+
   private final JwtTokenProvider jwtTokenProvider;
   private final GoogleOauthInfoService googleOauthInfoService;
   private final AppleOauthInfoService appleOauthInfoService;
@@ -65,6 +67,7 @@ public class AuthService {
     if (user == null) {
       isNewUser = true;
       user = createUser(request, socialId, email);
+
     } else if (user.isDeleted()) {
       isNewUser = true;
       user.restore();
@@ -127,6 +130,11 @@ public class AuthService {
         .role(UserRole.USER)
         .build();
 
-    return userRepository.save(user);
+    userRepository.save(user);
+
+    frameService.addToLibrary(user.getId(),
+        UUID.fromString("10000000-0000-0000-0000-000000000001"));
+
+    return user;
   }
 }

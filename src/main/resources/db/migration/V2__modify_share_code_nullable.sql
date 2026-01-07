@@ -1,0 +1,2 @@
+ALTER TABLE shares
+    MODIFY code VARCHAR(10) NULL;

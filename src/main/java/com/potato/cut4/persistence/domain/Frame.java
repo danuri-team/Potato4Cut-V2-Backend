@@ -46,7 +46,10 @@ public class Frame {
   private String description;
 
   @Column(nullable = false, length = 500)
-  private String frameImageUrl;
+  private String frameBaseImageUrl;
+
+  @Column(nullable = false, length = 500)
+  private String frameOverlayImageUrl;
 
   @Column(nullable = false, length = 500)
   private String previewImageUrl;
@@ -70,6 +73,12 @@ public class Frame {
 
   @Column(nullable = false)
   private long viewCount = 0;
+
+  @Column(nullable = false)
+  private int price = 0;
+
+  @Column(nullable = false)
+  private boolean isPublic = true;
 
   @CreationTimestamp
   @Column(nullable = false, updatable = false)
@@ -95,15 +104,20 @@ public class Frame {
   private List<UserFrameLibrary> userFrameLibraries = new ArrayList<>();
 
   @Builder
-  public Frame(Creator creator, String title, String description, String frameImageUrl,
-      String previewImageUrl, FrameCategory category, FrameStatus status) {
+  public Frame(Creator creator, String title, String description, String frameBaseImageUrl,
+      String frameOverlayImageUrl,
+      String previewImageUrl, FrameCategory category, FrameStatus status, Integer price,
+      Boolean isPublic) {
     this.creator = creator;
     this.title = title;
     this.description = description;
-    this.frameImageUrl = frameImageUrl;
+    this.frameBaseImageUrl = frameBaseImageUrl;
+    this.frameOverlayImageUrl = frameOverlayImageUrl;
     this.previewImageUrl = previewImageUrl;
     this.category = category;
     this.status = status;
+    this.price = price != null ? price : 0;
+    this.isPublic = isPublic;
   }
 
   public void approve() {
@@ -140,7 +154,8 @@ public class Frame {
     }
   }
 
-  public void updateInfo(String title, String description, FrameCategory category) {
+  public void updateInfo(String title, String description, FrameCategory category, Integer price,
+      Boolean isPublic) {
     if (title != null) {
       this.title = title;
     }
@@ -150,5 +165,23 @@ public class Frame {
     if (category != null) {
       this.category = category;
     }
+    if (price != null) {
+      this.price = price;
+    }
+    if (isPublic != null) {
+      this.isPublic = isPublic;
+    }
+  }
+
+  public void updateFrameBaseImageUrl(String frameBaseImageUrl) {
+    this.frameBaseImageUrl = frameBaseImageUrl;
+  }
+
+  public void updateFrameOverlayImageUrl(String frameOverlayImageUrl) {
+    this.frameOverlayImageUrl = frameOverlayImageUrl;
+  }
+
+  public void updatePreviewImageUrl(String previewImageUrl) {
+    this.previewImageUrl = previewImageUrl;
   }
 }

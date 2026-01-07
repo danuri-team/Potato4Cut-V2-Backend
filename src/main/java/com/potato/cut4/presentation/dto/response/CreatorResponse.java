@@ -1,6 +1,7 @@
 package com.potato.cut4.presentation.dto.response;
 
 import com.potato.cut4.persistence.domain.Creator;
+import com.potato.cut4.persistence.domain.Frame;
 import com.potato.cut4.persistence.domain.type.CreatorStatus;
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -34,7 +35,7 @@ public class CreatorResponse {
         .approvedAt(creator.getApprovedAt())
         .totalFrames(creator.getFrames().size())
         .totalDownloads(creator.getFrames().stream()
-            .mapToLong(frame -> frame.getDownloadCount())
+            .mapToLong(Frame::getDownloadCount)
             .sum())
         .build();
   }

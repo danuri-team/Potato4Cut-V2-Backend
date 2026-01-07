@@ -20,4 +20,14 @@ public class UpdateFrameRequest {
 
   @Size(max = 10, message = "태그는 최대 10개까지 추가할 수 있습니다.")
   private List<String> tags;
+
+  private String frameBaseImageKey;
+
+  private String frameOverlayImageKey;
+
+  private String previewImageKey;
+
+  private Integer price;
+
+  private Boolean isPublic;
 }
