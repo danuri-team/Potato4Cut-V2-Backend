@@ -38,3 +38,6 @@ out/
 
 ## Secret Key ##
 google-credentials.json
+
+## DB ##
+http:
