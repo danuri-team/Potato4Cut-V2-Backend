@@ -27,7 +27,8 @@ public class GlobalExceptionHandler {
       MethodArgumentNotValidException e) {
     FieldError fieldError = e.getBindingResult().getFieldError();
     String message =
-        fieldError != null ? fieldError.getDefaultMessage() : ErrorCode.INVALID_INPUT_VALUE.getMessage();
+        fieldError != null ? fieldError.getDefaultMessage()
+            : ErrorCode.INVALID_INPUT_VALUE.getMessage();
 
     log.error("Validation error: {}", message);
     ErrorResponse response = ErrorResponse.of(ErrorCode.INVALID_INPUT_VALUE, message);
