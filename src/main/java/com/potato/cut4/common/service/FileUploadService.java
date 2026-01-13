@@ -3,6 +3,7 @@ package com.potato.cut4.common.service;
 import com.potato.cut4.common.config.R2Config;
 import com.potato.cut4.common.exception.CustomException;
 import com.potato.cut4.common.exception.ErrorCode;
+import com.potato.cut4.common.util.GetCurrentEnvironment;
 import com.potato.cut4.presentation.dto.response.PreSignedUrlResponse;
 import java.time.Duration;
 import java.util.UUID;
@@ -62,7 +63,7 @@ public class FileUploadService {
     }
 
     String fileName = UUID.randomUUID() + DEFAULT_FILE_TYPE;
-    String key = directory + "/" + fileName;
+    String key = GetCurrentEnvironment.execute() + "/" + directory + "/" + fileName;
 
     PutObjectRequest putObjectRequest = PutObjectRequest.builder()
         .bucket(r2Config.getBucketName())
